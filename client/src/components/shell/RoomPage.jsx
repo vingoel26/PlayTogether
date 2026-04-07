@@ -1,11 +1,13 @@
-import { useEffect, useCallback } from 'react';
+import { useEffect, useCallback, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { LiveKitRoom } from '@livekit/components-react';
 import { useSocket } from '../../hooks/useSocket.js';
 import { useMedia } from '../../contexts/MediaContext.jsx';
 import { useRoom } from '../../contexts/RoomContext.jsx';
 import Avatar from '../ui/Avatar.jsx';
 import ControlButton from '../ui/ControlButton.jsx';
 import Tooltip from '../ui/Tooltip.jsx';
+import VideoGrid from '../video/VideoGrid.jsx';
 
 /**
  * RoomPage — Main in-room experience
@@ -14,13 +16,44 @@ import Tooltip from '../ui/Tooltip.jsx';
 export default function RoomPage() {
   const { roomCode } = useParams();
   const navigate = useNavigate();
-  const { emit, on, isConnected } = useSocket();
+  const { emit, on, isConnected, socket } = useSocket();
   const { displayName, micEnabled, camEnabled, toggleMic, toggleCam, hasJoined } = useMedia();
+  const [token, setToken] = useState('');
   const {
     participants, setParticipants,
     hostId, setHostId,
     setRoomCode, setIsConnected,
+    isConnected: isRoomJoined
   } = useRoom();
+
+  // Fetch LiveKit token once server confirms room join over socket
+  useEffect(() => {
+    if (!isRoomJoined || !socket?.id) return;
+    if (token) return;
+
+    let mounted = true;
+    const fetchToken = async () => {
+      try {
+        const SERVER_URL = import.meta.env.VITE_SERVER_URL || 'http://localhost:3001';
+        const res = await fetch(`${SERVER_URL}/api/livekit/token`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 
+            roomCode, 
+            participantName: displayName || 'Guest', 
+            participantId: socket.id 
+          })
+        });
+        const data = await res.json();
+        if (mounted && data.token) setToken(data.token);
+      } catch (err) {
+        console.error('Failed to get LiveKit token:', err);
+      }
+    };
+
+    fetchToken();
+    return () => { mounted = false; };
+  }, [isRoomJoined, socket?.id, roomCode, displayName, token]);
 
   // Join room on mount
   useEffect(() => {
@@ -131,101 +164,22 @@ export default function RoomPage() {
         </div>
       </div>
 
-      {/* Video Grid Area — placeholder tiles */}
-      <div
-        style={{
-          flex: 1,
-          display: 'grid',
-          gridTemplateColumns: participants.length <= 1 ? '1fr'
-            : participants.length <= 4 ? 'repeat(2, 1fr)'
-            : 'repeat(3, 1fr)',
-          gridTemplateRows: participants.length <= 2 ? '1fr'
-            : participants.length <= 6 ? 'repeat(2, 1fr)'
-            : 'repeat(3, 1fr)',
-          gap: 8,
-          padding: 8,
-        }}
-      >
-        {participants.map((p) => (
-          <div
-            key={p.id}
-            style={{
-              background: '#2D2E31',
-              borderRadius: 12,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              position: 'relative',
-              overflow: 'hidden',
-            }}
+      {/* Video Grid Area */}
+      <div style={{ flex: 1, position: 'relative' }}>
+        {token ? (
+          <LiveKitRoom
+            video={camEnabled}
+            audio={micEnabled}
+            token={token}
+            serverUrl={import.meta.env.VITE_LIVEKIT_WS_URL}
+            data-lk-theme="default"
+            style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column' }}
           >
-            <Avatar name={p.displayName} id={p.id} size={64} />
-
-            {/* Name chip */}
-            <div
-              style={{
-                position: 'absolute',
-                bottom: 8,
-                left: 8,
-                padding: '2px 8px',
-                borderRadius: 'var(--radius-tile)',
-                background: 'rgba(0,0,0,0.6)',
-                color: 'var(--color-text-on-dark)',
-                fontSize: 12,
-                fontFamily: 'var(--font-sans)',
-                maxWidth: '40%',
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-                whiteSpace: 'nowrap',
-              }}
-            >
-              {p.displayName}
-              {p.id === hostId && (
-                <span style={{
-                  marginLeft: 4,
-                  fontSize: 10,
-                  color: 'var(--color-cyan)',
-                }}>
-                  (host)
-                </span>
-              )}
-            </div>
-
-            {/* Mic icon */}
-            <div
-              style={{
-                position: 'absolute',
-                bottom: 8,
-                right: 8,
-              }}
-            >
-              <span
-                className="material-symbols-outlined"
-                style={{
-                  fontSize: 20,
-                  color: p.micEnabled ? 'var(--color-text-on-dark)' : 'var(--color-red)',
-                }}
-              >
-                {p.micEnabled ? 'mic' : 'mic_off'}
-              </span>
-            </div>
-          </div>
-        ))}
-
-        {/* Show "waiting" if alone */}
-        {participants.length === 0 && (
-          <div style={{
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
-            color: 'var(--color-text-on-dark-dim)',
-            gap: 8,
-          }}>
-            <span className="material-symbols-outlined" style={{ fontSize: 48, opacity: 0.5 }}>
-              hourglass_empty
-            </span>
-            <p style={{ fontSize: 14 }}>Connecting to room...</p>
+            <VideoGrid />
+          </LiveKitRoom>
+        ) : (
+          <div style={{ display: 'flex', height: '100%', alignItems: 'center', justifyContent: 'center', color: 'var(--color-text-on-dark-dim)' }}>
+            {isConnected ? 'Acquiring secure video token...' : 'Connecting to room socket...'}
           </div>
         )}
       </div>

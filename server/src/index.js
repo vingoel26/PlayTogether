@@ -4,6 +4,7 @@ import { Server } from 'socket.io';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import roomRoutes from './routes/roomRoutes.js';
+import livekitRoutes from './routes/livekitRoutes.js';
 import { SocketRouter } from './socket/SocketRouter.js';
 
 dotenv.config();
@@ -20,6 +21,7 @@ app.use(express.json());
 
 // REST routes
 app.use('/api/rooms', roomRoutes);
+app.use('/api/livekit', livekitRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {
