@@ -13,7 +13,7 @@ const SERVER_URL = import.meta.env.VITE_SERVER_URL || '';
 export default function PreJoinScreen() {
   const { roomCode } = useParams();
   const navigate = useNavigate();
-  const { micEnabled, camEnabled, displayName, setDisplayName, toggleMic, toggleCam } = useMedia();
+  const { micEnabled, camEnabled, displayName, setDisplayName, toggleMic, toggleCam, setHasJoined } = useMedia();
 
   const videoRef = useRef(null);
   const streamRef = useRef(null);
@@ -94,6 +94,7 @@ export default function PreJoinScreen() {
       streamRef.current.getTracks().forEach((t) => t.stop());
       streamRef.current = null;
     }
+    setHasJoined(true);
     setJoining(true);
     navigate(`/room/${roomCode}`);
   };

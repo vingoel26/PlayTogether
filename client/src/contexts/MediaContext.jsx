@@ -6,6 +6,7 @@ export function MediaProvider({ children }) {
   const [micEnabled, setMicEnabled] = useState(true);
   const [camEnabled, setCamEnabled] = useState(true);
   const [displayName, setDisplayName] = useState('');
+  const [hasJoined, setHasJoined] = useState(false);
 
   const toggleMic = useCallback(() => setMicEnabled((prev) => !prev), []);
   const toggleCam = useCallback(() => setCamEnabled((prev) => !prev), []);
@@ -16,9 +17,11 @@ export function MediaProvider({ children }) {
         micEnabled,
         camEnabled,
         displayName,
+        hasJoined,
         setMicEnabled,
         setCamEnabled,
         setDisplayName,
+        setHasJoined,
         toggleMic,
         toggleCam,
       }}
