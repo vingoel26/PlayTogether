@@ -6,7 +6,7 @@ export function RoomProvider({ children }) {
   const [roomCode, setRoomCode] = useState('');
   const [participants, setParticipants] = useState([]);
   const [hostId, setHostId] = useState(null);
-  const [activeHub, setActiveHub] = useState(null); // null | 'games' | 'watch'
+  const [activeHub, setActiveHubLocal] = useState(null); // Managed globally via sockets
   const [isConnected, setIsConnected] = useState(false);
 
   return (
@@ -20,7 +20,7 @@ export function RoomProvider({ children }) {
         setRoomCode,
         setParticipants,
         setHostId,
-        setActiveHub,
+        setActiveHub: setActiveHubLocal,
         setIsConnected,
       }}
     >

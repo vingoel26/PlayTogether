@@ -8,6 +8,10 @@ import Avatar from '../ui/Avatar.jsx';
 import ControlButton from '../ui/ControlButton.jsx';
 import Tooltip from '../ui/Tooltip.jsx';
 import VideoGrid from '../video/VideoGrid.jsx';
+import HubSwitcher from './HubSwitcher.jsx';
+import HubPanel from './HubPanel.jsx';
+import ParticipantsDrawer from './ParticipantsDrawer.jsx';
+import { useSnackbar } from '../../contexts/SnackbarContext.jsx';
 
 /**
  * RoomPage — Main in-room experience
@@ -23,8 +27,24 @@ export default function RoomPage() {
     participants, setParticipants,
     hostId, setHostId,
     setRoomCode, setIsConnected,
+    activeHub, setActiveHub,
     isConnected: isRoomJoined
   } = useRoom();
+
+  const [isHubSwitcherOpen, setIsHubSwitcherOpen] = useState(false);
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const { enqueueSnackbar } = useSnackbar();
+
+  const isHost = hostId === socket?.id;
+
+  // Handle emitting hub changes securely
+  const handleSelectHub = useCallback((hub) => {
+    if (isHost) {
+      emit('room:set-hub', { activeHub: hub });
+    } else {
+      enqueueSnackbar('Only the host can launch activities', 3000);
+    }
+  }, [emit, isHost, enqueueSnackbar]);
 
   // Fetch LiveKit token once server confirms room join over socket
   useEffect(() => {
@@ -79,24 +99,43 @@ export default function RoomPage() {
       setParticipants(data.participants);
       setHostId(data.hostId);
       setIsConnected(true);
+      if (data.activeHub !== undefined) setActiveHub(data.activeHub);
+      enqueueSnackbar('You joined the room', 3000);
     });
 
     const unsub2 = on('room:participant-joined', (data) => {
       setParticipants(data.participants);
       setHostId(data.hostId);
+      
+      const newParticipant = data.participants.find(p => p.id === data.socketId);
+      if (newParticipant) {
+        enqueueSnackbar(`${newParticipant.displayName} joined the call`);
+      }
     });
 
     const unsub3 = on('room:participant-left', (data) => {
+      // Find who left before updating state
+      const leftParticipant = participants.find(p => !data.participants.some(np => np.id === p.id));
+      
       setParticipants(data.participants);
       setHostId(data.hostId);
+
+      if (leftParticipant) {
+        enqueueSnackbar(`${leftParticipant.displayName} left the call`);
+      }
     });
 
-    const unsub4 = on('room:error', (data) => {
+    const unsub4 = on('room:hub-updated', (data) => {
+      setActiveHub(data.activeHub);
+    });
+
+    const unsub5 = on('room:error', (data) => {
       console.error('Room error:', data.message);
+      enqueueSnackbar(data.message, 4000);
     });
 
-    return () => { unsub1(); unsub2(); unsub3(); unsub4(); };
-  }, [isConnected, on, setParticipants, setHostId, setIsConnected]);
+    return () => { unsub1(); unsub2(); unsub3(); unsub4(); unsub5(); };
+  }, [isConnected, on, setParticipants, setHostId, setIsConnected, setActiveHub, enqueueSnackbar]);
 
   // Leave room
   const handleLeave = useCallback(() => {
@@ -164,24 +203,27 @@ export default function RoomPage() {
         </div>
       </div>
 
-      {/* Video Grid Area */}
-      <div style={{ flex: 1, position: 'relative' }}>
-        {token ? (
-          <LiveKitRoom
-            video={camEnabled}
-            audio={micEnabled}
-            token={token}
-            serverUrl={import.meta.env.VITE_LIVEKIT_WS_URL}
-            data-lk-theme="default"
-            style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column' }}
-          >
-            <VideoGrid />
-          </LiveKitRoom>
-        ) : (
-          <div style={{ display: 'flex', height: '100%', alignItems: 'center', justifyContent: 'center', color: 'var(--color-text-on-dark-dim)' }}>
-            {isConnected ? 'Acquiring secure video token...' : 'Connecting to room socket...'}
-          </div>
-        )}
+      <div style={{ flex: 1, display: 'flex', position: 'relative', overflow: 'hidden' }}>
+        {/* Video Grid Area */}
+        <div style={{ flex: 1, position: 'relative', display: 'flex', flexDirection: 'column' }}>
+          {token ? (
+            <LiveKitRoom
+              video={camEnabled}
+              audio={micEnabled}
+              token={token}
+              serverUrl={import.meta.env.VITE_LIVEKIT_WS_URL}
+              data-lk-theme="default"
+              style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column' }}
+            >
+              <VideoGrid onCloseHub={() => handleSelectHub(null)} />
+              <ParticipantsDrawer isOpen={isDrawerOpen} onClose={() => setIsDrawerOpen(false)} />
+            </LiveKitRoom>
+          ) : (
+            <div style={{ display: 'flex', height: '100%', alignItems: 'center', justifyContent: 'center', color: 'var(--color-text-on-dark-dim)' }}>
+              {isConnected ? 'Acquiring secure video token...' : 'Connecting to room socket...'}
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Control Bar */}
@@ -244,11 +286,34 @@ export default function RoomPage() {
         </div>
 
         {/* Right zone */}
-        <div style={{ marginLeft: 'auto', display: 'flex', gap: 8 }}>
+        <div style={{ marginLeft: 'auto', display: 'flex', gap: 8, position: 'relative' }}>
           <ControlButton icon="chat" label="Chat" size={40} />
-          <ControlButton icon="people" label="Participants" size={40} />
-          <ControlButton icon="grid_view" label="Activities" size={40} />
+          <ControlButton 
+            icon="people" 
+            label="Participants" 
+            size={40} 
+            active={isDrawerOpen} 
+            onClick={() => setIsDrawerOpen(true)}
+          />
+          <ControlButton 
+            icon="grid_view" 
+            label={isHost ? "Activities" : "Activities (Host Only)"}
+            size={40} 
+            disabled={!isHost && !activeHub}
+            active={isHubSwitcherOpen || !!activeHub}
+            activeColor="var(--color-blue)"
+            onClick={() => {
+              if (isHost) setIsHubSwitcherOpen(!isHubSwitcherOpen);
+              else enqueueSnackbar("Only the host can launch activities", 3000);
+            }}
+          />
           <ControlButton icon="more_vert" label="More options" size={40} />
+
+          <HubSwitcher 
+            isOpen={isHubSwitcherOpen} 
+            onClose={() => setIsHubSwitcherOpen(false)} 
+            onSelectHub={handleSelectHub}
+          />
         </div>
       </div>
     </div>

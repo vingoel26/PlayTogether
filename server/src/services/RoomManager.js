@@ -17,6 +17,7 @@ export class RoomManager {
             hostId: null,
             participants: [],
             createdAt: Date.now(),
+            activeHub: null, // 'games' or 'watch' or null
             activeGame: null,
             watchState: null,
         };
@@ -79,5 +80,16 @@ export class RoomManager {
 
     getRoomCount() {
         return this.rooms.size;
+    }
+
+    setActiveHub(code, hostId, hub) {
+        const room = this.rooms.get(code);
+        if (!room) return false;
+
+        // Ensure only the host can change the hub
+        if (room.hostId !== hostId) return false;
+
+        room.activeHub = hub;
+        return true;
     }
 }

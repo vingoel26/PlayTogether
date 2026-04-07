@@ -18,6 +18,7 @@ export class SocketRouter {
             socket.on('room:join', (data) => this.handleRoomJoin(socket, data));
             socket.on('room:leave', () => this.handleRoomLeave(socket));
             socket.on('room:rejoin', (data) => this.handleRoomRejoin(socket, data));
+            socket.on('room:set-hub', (data) => this.handleSetHub(socket, data));
 
             // ── Disconnect ──
             socket.on('disconnect', (reason) => {
@@ -62,6 +63,7 @@ export class SocketRouter {
             roomCode,
             participants: updatedRoom.participants,
             hostId: updatedRoom.hostId,
+            activeHub: updatedRoom.activeHub,
         });
 
         // Tell everyone else about the new participant
@@ -108,5 +110,21 @@ export class SocketRouter {
         // Simply rejoin — treat like a fresh join with state restore
         this.handleRoomJoin(socket, { roomCode, displayName });
         console.log(`🔄 ${displayName} rejoined room ${roomCode}`);
+    }
+
+    handleSetHub(socket, { activeHub }) {
+        const roomCode = socket.roomCode;
+        if (!roomCode) return;
+
+        const success = this.roomManager.setActiveHub(roomCode, socket.id, activeHub);
+
+        if (success) {
+            // Broadcast the new hub state to everyone in the room
+            this.io.to(roomCode).emit('room:hub-updated', { activeHub });
+            console.log(`🎮 Hub set to '${activeHub}' in room ${roomCode} by host ${socket.id}`);
+        } else {
+            // Inform the client they are not authorized
+            socket.emit('room:error', { message: 'Only the host can change the active activity' });
+        }
     }
 }
