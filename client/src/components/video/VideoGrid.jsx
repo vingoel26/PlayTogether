@@ -1,4 +1,6 @@
+import { useEffect } from 'react';
 import { useParticipants, useLocalParticipant } from '@livekit/components-react';
+import { useMedia } from '../../contexts/MediaContext.jsx';
 import VideoTile from './VideoTile.jsx';
 
 /**
@@ -7,6 +9,16 @@ import VideoTile from './VideoTile.jsx';
  */
 export default function VideoGrid() {
   const participants = useParticipants();
+  const { localParticipant } = useLocalParticipant();
+  const { camEnabled, micEnabled } = useMedia();
+
+  // Sync our UI toggles directly to the LiveKit LocalParticipant
+  useEffect(() => {
+    if (localParticipant) {
+      localParticipant.setCameraEnabled(camEnabled);
+      localParticipant.setMicrophoneEnabled(micEnabled);
+    }
+  }, [localParticipant, camEnabled, micEnabled]);
 
   // Determine grid layout based on number of participants
   const count = participants.length;

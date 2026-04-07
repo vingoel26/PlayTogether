@@ -27,10 +27,11 @@ export default function VideoTile({ participant }) {
         position: 'relative',
         overflow: 'hidden',
         // "Speaking ring" effect matching Google Meet
-        boxShadow: isSpeaking ? 'inset 0 0 0 3px var(--color-blue)' : 'none',
-        transition: 'box-shadow 0.15s ease-in-out',
+        border: `3px solid ${isSpeaking ? 'var(--color-blue)' : 'transparent'}`,
+        transition: 'border-color 0.15s ease-in-out',
         width: '100%',
         height: '100%',
+        boxSizing: 'border-box',
       }}
     >
       {/* Actual LiveKit Video Stream */}
