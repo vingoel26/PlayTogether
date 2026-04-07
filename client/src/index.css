@@ -1,111 +1,289 @@
+@import "tailwindcss";
+
+/* ════════════════════════════════════════════════
+   PlayTogether Design System — CSS Custom Properties
+   Based on Google Meet / Material Design 3
+   ════════════════════════════════════════════════ */
+
 :root {
-  --text: #6b6375;
-  --text-h: #08060d;
-  --bg: #fff;
-  --border: #e5e4e7;
-  --code-bg: #f4f3ec;
-  --accent: #aa3bff;
-  --accent-bg: rgba(170, 59, 255, 0.1);
-  --accent-border: rgba(170, 59, 255, 0.5);
-  --social-bg: rgba(244, 243, 236, 0.5);
-  --shadow:
-    rgba(0, 0, 0, 0.1) 0 10px 15px -3px, rgba(0, 0, 0, 0.05) 0 4px 6px -2px;
+  /* ── Colors ── */
+  --color-video-surface: #202124;
+  --color-control-bar: #3C4043;
+  --color-blue: #1857D9;
+  --color-blue-hover: #1749B1;
+  --color-blue-light: #E8F0FE;
+  --color-blue-border: #C5D8FD;
+  --color-green: #0F9D58;
+  --color-green-light: #E6F4EA;
+  --color-red: #D93025;
+  --color-red-hover: #C5281E;
+  --color-red-light: #FCE8E6;
+  --color-surface-light: #F1F3F4;
+  --color-surface-white: #FFFFFF;
+  --color-border: #E0E0E0;
+  --color-text-primary: #202124;
+  --color-text-secondary: #5F6368;
+  --color-text-tertiary: #9AA0A6;
+  --color-text-on-dark: #FFFFFF;
+  --color-text-on-dark-dim: #BDC1C6;
+  --color-ripple: rgba(0, 0, 0, 0.08);
+  --color-ripple-light: rgba(255, 255, 255, 0.12);
+  --color-cyan: #00BCD4;
+  --color-cyan-bg: rgba(0, 188, 212, 0.15);
+  --color-amber: #F29900;
+  --color-snackbar: #323232;
+  --color-queue-surface: #2D2E31;
 
-  --sans: system-ui, 'Segoe UI', Roboto, sans-serif;
-  --heading: system-ui, 'Segoe UI', Roboto, sans-serif;
-  --mono: ui-monospace, Consolas, monospace;
+  /* ── Typography ── */
+  --font-sans: 'DM Sans', 'Roboto', 'Arial', sans-serif;
+  --font-mono: 'Roboto Mono', monospace;
 
-  font: 18px/145% var(--sans);
-  letter-spacing: 0.18px;
-  color-scheme: light dark;
-  color: var(--text);
-  background: var(--bg);
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  /* ── Spacing (8px base unit) ── */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
 
-  @media (max-width: 1024px) {
-    font-size: 16px;
+  /* ── Radii ── */
+  --radius-tile: 4px;
+  --radius-input: 4px;
+  --radius-tooltip: 4px;
+  --radius-snackbar: 4px;
+  --radius-card: 8px;
+  --radius-drawer: 12px;
+  --radius-chip: 16px;
+  --radius-pill: 24px;
+  --radius-dialog: 28px;
+  --radius-circle: 50%;
+
+  /* ── Shadows ── */
+  --shadow-float: 0 1px 3px rgba(0, 0, 0, 0.12);
+  --shadow-modal: 0 4px 16px rgba(0, 0, 0, 0.16);
+  --shadow-control-bar: 0 -1px 0 rgba(0, 0, 0, 0.12);
+  --shadow-card-hover: 0 1px 6px rgba(0, 0, 0, 0.12);
+
+  /* ── Motion ── */
+  --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+  --ease-decelerate: cubic-bezier(0.4, 0, 1, 1);
+  --ease-linear: linear;
+  --duration-ripple: 300ms;
+  --duration-drawer-in: 250ms;
+  --duration-drawer-out: 200ms;
+  --duration-tile-resize: 300ms;
+  --duration-snackbar: 250ms;
+  --duration-card-hover: 150ms;
+  --duration-hub-switch: 200ms;
+
+  /* ── Layout ── */
+  --topbar-height: 64px;
+  --control-bar-height: 72px;
+  --tile-gap: 2px;
+  --panel-header-height: 56px;
+  --participants-drawer-width: 300px;
+  --games-panel-width: 60%;
+  --watch-panel-width: 70%;
+}
+
+/* ── Reduced Motion ── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0ms !important;
+    transition-duration: 0ms !important;
   }
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --text: #9ca3af;
-    --text-h: #f3f4f6;
-    --bg: #16171d;
-    --border: #2e303a;
-    --code-bg: #1f2028;
-    --accent: #c084fc;
-    --accent-bg: rgba(192, 132, 252, 0.15);
-    --accent-border: rgba(192, 132, 252, 0.5);
-    --social-bg: rgba(47, 48, 58, 0.5);
-    --shadow:
-      rgba(0, 0, 0, 0.4) 0 10px 15px -3px, rgba(0, 0, 0, 0.25) 0 4px 6px -2px;
-  }
+/* ════════════════════════════════════════════════
+   Global Reset & Base Styles
+   ════════════════════════════════════════════════ */
 
-  #social .button-icon {
-    filter: invert(1) brightness(2);
-  }
-}
-
-body {
+* {
   margin: 0;
-}
-
-#root {
-  width: 1126px;
-  max-width: 100%;
-  margin: 0 auto;
-  text-align: center;
-  border-inline: 1px solid var(--border);
-  min-height: 100svh;
-  display: flex;
-  flex-direction: column;
+  padding: 0;
   box-sizing: border-box;
 }
 
-h1,
-h2 {
-  font-family: var(--heading);
+html, body, #root {
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+}
+
+body {
+  font-family: var(--font-sans);
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 20px;
+  color: var(--color-text-primary);
+  background-color: var(--color-surface-light);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ══ Material Symbols Helper ══ */
+.material-symbols-outlined {
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+  user-select: none;
+  vertical-align: middle;
+}
+
+/* ════════════════════════════════════════════════
+   Typography Utility Classes
+   ════════════════════════════════════════════════ */
+
+.text-display {
+  font-size: 32px;
   font-weight: 500;
-  color: var(--text-h);
+  line-height: 40px;
 }
 
-h1 {
-  font-size: 56px;
-  letter-spacing: -1.68px;
-  margin: 32px 0;
-  @media (max-width: 1024px) {
-    font-size: 36px;
-    margin: 20px 0;
+.text-h1 {
+  font-size: 22px;
+  font-weight: 500;
+  line-height: 28px;
+}
+
+.text-h2 {
+  font-size: 16px;
+  font-weight: 500;
+  line-height: 24px;
+}
+
+.text-body {
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 20px;
+}
+
+.text-body-small {
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 16px;
+}
+
+.text-button {
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 20px;
+}
+
+.text-mono {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 20px;
+}
+
+.text-overline {
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 16px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* ════════════════════════════════════════════════
+   Scrollbar Styling
+   ════════════════════════════════════════════════ */
+
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-text-secondary);
+}
+
+/* ════════════════════════════════════════════════
+   Speaking Ring Animation
+   ════════════════════════════════════════════════ */
+
+@keyframes speakingPulse {
+  0%, 100% { border-width: 2px; }
+  50% { border-width: 3px; }
+}
+
+.speaking-ring {
+  border: 2px solid var(--color-green);
+  animation: speakingPulse 1200ms ease-in-out infinite;
+}
+
+/* ════════════════════════════════════════════════
+   Score Counter Animation
+   ════════════════════════════════════════════════ */
+
+@keyframes scoreUpdate {
+  0% { transform: scale(1.3); color: var(--color-blue); }
+  100% { transform: scale(1); }
+}
+
+.score-animate {
+  animation: scoreUpdate 400ms ease-out;
+}
+
+/* ════════════════════════════════════════════════
+   Snackbar Animation
+   ════════════════════════════════════════════════ */
+
+@keyframes snackbarIn {
+  from { transform: translateY(20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes snackbarOut {
+  from { transform: translateY(0); opacity: 1; }
+  to { transform: translateY(20px); opacity: 0; }
+}
+
+/* ════════════════════════════════════════════════
+   Floating Reaction Animation
+   ════════════════════════════════════════════════ */
+
+@keyframes reactionFloat {
+  0% {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  13% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  80% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-120px);
+    opacity: 0;
   }
 }
-h2 {
-  font-size: 24px;
-  line-height: 118%;
-  letter-spacing: -0.24px;
-  margin: 0 0 8px;
-  @media (max-width: 1024px) {
-    font-size: 20px;
-  }
-}
-p {
-  margin: 0;
+
+/* ════════════════════════════════════════════════
+   Memory Card Flip Animation
+   ════════════════════════════════════════════════ */
+
+@keyframes cardFlip {
+  0% { transform: perspective(600px) rotateY(0deg); }
+  100% { transform: perspective(600px) rotateY(180deg); }
 }
 
-code,
-.counter {
-  font-family: var(--mono);
-  display: inline-flex;
-  border-radius: 4px;
-  color: var(--text-h);
-}
-
-code {
-  font-size: 15px;
-  line-height: 135%;
-  padding: 4px 8px;
-  background: var(--code-bg);
+@keyframes mismatchShake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-6px); }
+  40% { transform: translateX(6px); }
+  60% { transform: translateX(-6px); }
+  80% { transform: translateX(6px); }
 }

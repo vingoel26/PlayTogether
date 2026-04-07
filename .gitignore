@@ -13,4 +13,5 @@ Thumbs.db
 *.log
 npm-debug.log*
 coverage/
+package-lock.json
 PlayTogether_Specs_v5_AntiGravity.docx
