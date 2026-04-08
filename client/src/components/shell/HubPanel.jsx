@@ -1,11 +1,47 @@
 import Tooltip from '../ui/Tooltip.jsx';
+import TicTacToeBoard from '../game/TicTacToeBoard.jsx';
+import MemoryMatchBoard from '../game/MemoryMatchBoard.jsx';
+import GameSelector from '../game/GameSelector.jsx';
+import { useGameSync } from '../../hooks/useGameSync.js';
 
 /**
  * HubPanel — The resilient right-side panel that slides in
  * Takes up 60% of the screen for Games, 70% for Watch
  */
 export default function HubPanel({ activeHub, onClose }) {
+  const { gameState, sendMove, startGame, resetGame } = useGameSync();
+
   if (!activeHub) return null;
+
+  const renderGameContent = () => {
+    if (!gameState || gameState.state === 'lobby') {
+      return <GameSelector onStart={startGame} />;
+    }
+
+    if (gameState.type === 'tictactoe') {
+      return (
+        <TicTacToeBoard
+          gameState={gameState}
+          onMove={sendMove}
+          onStart={startGame}   // Just in case
+          onReset={resetGame}
+        />
+      );
+    }
+
+    if (gameState.type === 'memory') {
+      return (
+        <MemoryMatchBoard
+          gameState={gameState}
+          onMove={sendMove}
+          onStart={startGame}
+          onReset={resetGame}
+        />
+      );
+    }
+
+    return null;
+  };
 
   return (
     <div
@@ -46,9 +82,15 @@ export default function HubPanel({ activeHub, onClose }) {
           {activeHub === 'games' ? 'Mini Games' : 'Watch Party'}
         </span>
 
+        {/* Dynamic header options could go here */}
+
         <Tooltip text="Close Panel">
           <button
-            onClick={onClose}
+            onClick={() => {
+                // IMPORTANT: If they close the panel, does it destroy the game state?
+                // The state lives in RoomContext/Socket, so the panel just hides visually
+                onClose();
+            }}
             style={{
               background: 'transparent',
               border: 'none',
@@ -62,32 +104,24 @@ export default function HubPanel({ activeHub, onClose }) {
         </Tooltip>
       </div>
 
-      {/* Panel Content Area (To be replaced in Phase C & D) */}
-      <div style={{ flex: 1, padding: 24, overflowY: 'auto' }}>
-        <div style={{
-          height: '100%',
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-          color: 'var(--color-text-on-dark-dim)',
-          textAlign: 'center',
-          border: '2px dashed var(--color-border)',
-          borderRadius: 8,
-          gap: 16
-        }}>
-          <span className="material-symbols-outlined" style={{ fontSize: 48, opacity: 0.5 }}>
-            {activeHub === 'games' ? 'sports_esports' : 'smart_display'}
-          </span>
-          <div>
-            <h3 style={{ margin: '0 0 8px 0', color: 'var(--color-text-on-dark)' }}>
-              {activeHub === 'games' ? 'Game Engine' : 'Watch Engine'}
-            </h3>
-            <p style={{ margin: 0, fontSize: 13, maxWidth: 260 }}>
-              This panel will host the interactive components during Phase C.
-            </p>
+      {/* Panel Content — Game or Watch */}
+      <div style={{ flex: 1, overflowY: 'auto' }}>
+        {activeHub === 'games' ? (
+            renderGameContent()
+        ) : (
+          <div style={{
+            height: '100%', display: 'flex', flexDirection: 'column',
+            alignItems: 'center', justifyContent: 'center',
+            color: 'var(--color-text-on-dark-dim)', textAlign: 'center',
+            padding: 24, gap: 16,
+          }}>
+            <span className="material-symbols-outlined" style={{ fontSize: 48, opacity: 0.5 }}>smart_display</span>
+            <div>
+              <h3 style={{ margin: '0 0 8px 0', color: 'var(--color-text-on-dark)' }}>Watch Party</h3>
+              <p style={{ margin: 0, fontSize: 13, maxWidth: 260 }}>Coming soon in Phase E!</p>
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );

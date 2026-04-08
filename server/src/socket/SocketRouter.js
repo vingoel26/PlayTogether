@@ -1,4 +1,5 @@
 import { RoomManager } from '../services/RoomManager.js';
+import { GameFactory } from '../game/GameFactory.js';
 
 /**
  * SocketRouter — Central mediator for all Socket.io events
@@ -8,6 +9,7 @@ export class SocketRouter {
     constructor(io) {
         this.io = io;
         this.roomManager = new RoomManager();
+        this.activeGames = new Map(); // roomCode -> BaseGame instance
     }
 
     init() {
@@ -19,6 +21,11 @@ export class SocketRouter {
             socket.on('room:leave', () => this.handleRoomLeave(socket));
             socket.on('room:rejoin', (data) => this.handleRoomRejoin(socket, data));
             socket.on('room:set-hub', (data) => this.handleSetHub(socket, data));
+
+            // ── Game Events ──
+            socket.on('game:start', (data) => this.handleGameStart(socket, data));
+            socket.on('game:move', (data) => this.handleGameMove(socket, data));
+            socket.on('game:reset', () => this.handleGameReset(socket));
 
             // ── Disconnect ──
             socket.on('disconnect', (reason) => {
@@ -126,5 +133,81 @@ export class SocketRouter {
             // Inform the client they are not authorized
             socket.emit('room:error', { message: 'Only the host can change the active activity' });
         }
+    }
+
+    // ── Game Handlers ──
+
+    handleGameStart(socket, { gameType }) {
+        const roomCode = socket.roomCode;
+        if (!roomCode) return;
+
+        const room = this.roomManager.getRoom(roomCode);
+        if (!room) return;
+
+        // Only host can start games
+        if (room.hostId !== socket.id) {
+            socket.emit('room:error', { message: 'Only the host can start a game' });
+            return;
+        }
+
+        // Need at least 2 players
+        if (room.participants.length < 2) {
+            socket.emit('room:error', { message: 'Need at least 2 players to start a game' });
+            return;
+        }
+
+        try {
+            // Pick the first 2 participants as players for the game
+            const players = room.participants.slice(0, 2).map(p => ({
+                id: p.id,
+                displayName: p.displayName
+            }));
+
+            const game = GameFactory.create(gameType, roomCode, players);
+            game.start();
+            this.activeGames.set(roomCode, game);
+
+            // Broadcast game state to the entire room
+            this.io.to(roomCode).emit('game:state-update', game.getState());
+            console.log(`🎮 Game '${gameType}' started in room ${roomCode}`);
+        } catch (err) {
+            socket.emit('room:error', { message: err.message });
+        }
+    }
+
+    handleGameMove(socket, { move }) {
+        const roomCode = socket.roomCode;
+        if (!roomCode) return;
+
+        const game = this.activeGames.get(roomCode);
+        if (!game) {
+            socket.emit('room:error', { message: 'No active game in this room' });
+            return;
+        }
+
+        const valid = game.handleMove(socket.id, move);
+        if (valid) {
+            this.io.to(roomCode).emit('game:state-update', game.getState());
+        } else {
+            socket.emit('game:invalid-move', { message: 'Invalid move' });
+        }
+    }
+
+    handleGameReset(socket) {
+        const roomCode = socket.roomCode;
+        if (!roomCode) return;
+
+        const room = this.roomManager.getRoom(roomCode);
+        if (!room || room.hostId !== socket.id) {
+            socket.emit('room:error', { message: 'Only the host can reset the game' });
+            return;
+        }
+
+        const game = this.activeGames.get(roomCode);
+        if (!game) return;
+
+        game.reset();
+        this.io.to(roomCode).emit('game:state-update', game.getState());
+        console.log(`🔄 Game reset in room ${roomCode}`);
     }
 }

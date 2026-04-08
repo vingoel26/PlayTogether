@@ -3,61 +3,70 @@ import { io } from 'socket.io-client';
 
 const SERVER_URL = import.meta.env.VITE_SERVER_URL || 'http://localhost:3001';
 
-/**
- * useSocket — Manages Socket.io connection lifecycle
- * Auto-connects, auto-reconnects, provides emit/on/off helpers
- */
+// Global singleton socket instance
+let globalSocket = null;
+let connectionState = false;
+let listeners = new Set();
+
+const notifyListeners = () => listeners.forEach(fn => fn(connectionState));
+
 export function useSocket() {
-    const socketRef = useRef(null);
-    const [isConnected, setIsConnected] = useState(false);
+    const [isConnected, setIsConnected] = useState(connectionState);
 
     useEffect(() => {
-        const socket = io(SERVER_URL, {
-            autoConnect: true,
-            reconnection: true,
-            reconnectionAttempts: Infinity,
-            reconnectionDelay: 1000,
-            reconnectionDelayMax: 30000,
-            transports: ['websocket', 'polling'],
-        });
+        // Register listener for reactive updates
+        listeners.add(setIsConnected);
 
-        socketRef.current = socket;
+        if (!globalSocket) {
+            globalSocket = io(SERVER_URL, {
+                autoConnect: true,
+                reconnection: true,
+                reconnectionAttempts: Infinity,
+                reconnectionDelay: 1000,
+                reconnectionDelayMax: 30000,
+                transports: ['websocket', 'polling'],
+            });
 
-        socket.on('connect', () => {
-            console.log('🔌 Socket connected:', socket.id);
-            setIsConnected(true);
-        });
+            // Attach global listeners
+            globalSocket.on('connect', () => {
+                console.log('🔌 Socket connected:', globalSocket.id);
+                connectionState = true;
+                notifyListeners();
+            });
 
-        socket.on('disconnect', (reason) => {
-            console.log('🔌 Socket disconnected:', reason);
-            setIsConnected(false);
-        });
+            globalSocket.on('disconnect', (reason) => {
+                console.log('🔌 Socket disconnected:', reason);
+                connectionState = false;
+                notifyListeners();
+            });
 
-        socket.on('connect_error', (err) => {
-            console.warn('🔌 Socket connection error:', err.message);
-        });
+            globalSocket.on('connect_error', (err) => {
+                console.warn('🔌 Socket connection error:', err.message);
+            });
+        }
 
         return () => {
-            socket.disconnect();
-            socketRef.current = null;
+            listeners.delete(setIsConnected);
+            // We intentionally do NOT disconnect the singleton socket on unmount
+            // because other components still rely on it!
         };
     }, []);
 
     const emit = useCallback((event, data) => {
-        socketRef.current?.emit(event, data);
+        globalSocket?.emit(event, data);
     }, []);
 
     const on = useCallback((event, handler) => {
-        socketRef.current?.on(event, handler);
-        return () => socketRef.current?.off(event, handler);
+        globalSocket?.on(event, handler);
+        return () => globalSocket?.off(event, handler);
     }, []);
 
     const off = useCallback((event, handler) => {
-        socketRef.current?.off(event, handler);
+        globalSocket?.off(event, handler);
     }, []);
 
     return {
-        socket: socketRef.current,
+        socket: globalSocket,
         isConnected,
         emit,
         on,
