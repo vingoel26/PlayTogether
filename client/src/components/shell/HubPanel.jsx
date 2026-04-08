@@ -1,13 +1,14 @@
-import React from 'react';
+import React, { Suspense, lazy } from 'react';
 import Tooltip from '../ui/Tooltip.jsx';
-import TicTacToeBoard from '../game/TicTacToeBoard.jsx';
-import MemoryMatchBoard from '../game/MemoryMatchBoard.jsx';
-import QuickMathBoard from '../game/QuickMathBoard.jsx';
-import RPSBoard from '../game/RPSBoard.jsx';
-import WordScrambleBoard from '../game/WordScrambleBoard.jsx';
 import GameSelector from '../game/GameSelector.jsx';
 import WatchPanel from '../watch/WatchPanel.jsx';
 import { useGameSync } from '../../hooks/useGameSync.js';
+
+const TicTacToeBoard = lazy(() => import('../game/TicTacToeBoard.jsx'));
+const MemoryMatchBoard = lazy(() => import('../game/MemoryMatchBoard.jsx'));
+const QuickMathBoard = lazy(() => import('../game/QuickMathBoard.jsx'));
+const RPSBoard = lazy(() => import('../game/RPSBoard.jsx'));
+const WordScrambleBoard = lazy(() => import('../game/WordScrambleBoard.jsx'));
 
 /**
  * HubPanel — The resilient right-side panel that slides in
@@ -102,12 +103,10 @@ export default function HubPanel({ activeHub, onClose }) {
       </div>
 
       {/* Panel Content — Game or Watch */}
-      <div style={{ flex: 1, overflowY: 'auto' }}>
-        {activeHub === 'games' ? (
-            renderGameContent()
-        ) : (
-            <WatchPanel />
-        )}
+      <div style={{ flex: 1, position: 'relative', display: 'flex', flexDirection: 'column' }}>
+        <Suspense fallback={<div style={{ display: 'flex', flex: 1, alignItems: 'center', justifyContent: 'center', color: 'var(--color-text-on-dark-dim)' }}>Loading component...</div>}>
+          {activeHub === 'watch' ? <WatchPanel /> : renderGameContent()}
+        </Suspense>
       </div>
     </div>
   );
