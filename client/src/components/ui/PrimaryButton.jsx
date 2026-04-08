@@ -11,7 +11,7 @@ export default function PrimaryButton({
   disabled = false,
   fullWidth = false,
   danger = false,
-  style = {},
+  style = {}, 
   className = '',
 }) {
   const [pressed, setPressed] = useState(false);
