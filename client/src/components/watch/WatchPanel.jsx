@@ -2,6 +2,7 @@ import React, { useRef, useState } from 'react';
 import VideoPlayer from './VideoPlayer.jsx';
 import ReactionBar from './ReactionBar.jsx';
 import QueuePanel from './QueuePanel.jsx';
+import FloatingReactions from './FloatingReactions.jsx';
 import { useWatchSync } from '../../hooks/useWatchSync.js';
 import { useRoom } from '../../contexts/RoomContext.jsx';
 import { useSocket } from '../../hooks/useSocket.js';
@@ -72,6 +73,7 @@ export default function WatchPanel() {
                         seek={seek}
                         playNext={playNext}
                     />
+                    <FloatingReactions />
                 </div>
                 
                 {/* Collapsible Reactions (Bottom) - using Tailwind group hover */}

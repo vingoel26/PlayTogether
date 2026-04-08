@@ -38,6 +38,7 @@ export class SocketRouter {
             socket.on('watch:queue-add', (data) => this.handleWatchQueueAdd(socket, data));
             socket.on('watch:queue-remove', (data) => this.handleWatchQueueRemove(socket, data));
             socket.on('watch:queue-dequeue', () => this.handleWatchQueueDequeue(socket));
+            socket.on('watch:react', (data) => this.handleWatchReact(socket, data));
 
             // ── Disconnect ──
             socket.on('disconnect', (reason) => {
@@ -322,5 +323,16 @@ export class SocketRouter {
             this.io.to(roomCode).emit('watch:state-update', engine.getState());
             console.log(`⏯️ Video dequeued in room ${roomCode}: ${item.url}`);
         }
+    }
+
+    handleWatchReact(socket, { emoji }) {
+        const roomCode = socket.roomCode;
+        if (!roomCode || !emoji) return;
+
+        this.io.to(roomCode).emit('watch:reacted', {
+            id: Date.now() + Math.random().toString(36).substring(2, 6),
+            emoji,
+            userId: socket.id
+        });
     }
 }
