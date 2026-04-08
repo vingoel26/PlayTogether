@@ -14,8 +14,11 @@ const httpServer = createServer(app);
 
 const PORT = process.env.PORT || 3001;
 // Support both single URL and comma-separated multiple URLs
-const clientEnv = process.env.CLIENT_URL || 'http://localhost:5173';
-const CLIENT_URLS = clientEnv.includes(',') ? clientEnv.split(',').map(u => u.trim()) : clientEnv;
+const defaultOrigins = ['http://localhost:5173', 'https://playxtogether.vercel.app'];
+const clientEnv = process.env.CLIENT_URL;
+const CLIENT_URLS = clientEnv
+    ? (clientEnv.includes(',') ? clientEnv.split(',').map(u => u.trim()) : [clientEnv, ...defaultOrigins])
+    : defaultOrigins;
 
 // Middleware
 // Middleware
