@@ -10,7 +10,8 @@ export default function GameSelector({ onStart }) {
     { id: 'tictactoe', name: 'Tic Tac Toe', icon: 'grid_3x3', desc: 'Classic 3x3 strategy game. Get three in a row to win!' },
     { id: 'memory', name: 'Memory Match', icon: 'style', desc: 'Find all the matching emoji pairs. The player with the most pairs wins!' },
     { id: 'quickmath', name: 'Quick Math', icon: 'calculate', desc: 'Race to answer math questions! Faster answers earn more points.' },
-    { id: 'rps', name: 'Rock Paper Scissors', icon: 'gesture', desc: 'Best of 5! Pick rock, paper, or scissors — choices reveal simultaneously.' }
+    { id: 'rps', name: 'Rock Paper Scissors', icon: 'gesture', desc: 'Best of 5! Pick rock, paper, or scissors — choices reveal simultaneously.' },
+    { id: 'wordscramble', name: 'Word Scramble', icon: 'spellcheck', desc: 'Unscramble the letters to find the hidden word. Use hints if you get stuck!' }
   ];
 
   return (

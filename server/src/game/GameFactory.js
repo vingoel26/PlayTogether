@@ -2,6 +2,7 @@ import { TicTacToe } from './TicTacToe.js';
 import { MemoryMatch } from './MemoryMatch.js';
 import { QuickMath } from './QuickMath.js';
 import { RockPaperScissors } from './RockPaperScissors.js';
+import { WordScramble } from './WordScramble.js';
 
 /**
  * GameFactory — Creates game instances by type string
@@ -18,6 +19,8 @@ export class GameFactory {
                 return new QuickMath(roomCode, players);
             case 'rps':
                 return new RockPaperScissors(roomCode, players);
+            case 'wordscramble':
+                return new WordScramble(roomCode, players);
             default:
                 throw new Error(`Unknown game type: ${type}`);
         }
