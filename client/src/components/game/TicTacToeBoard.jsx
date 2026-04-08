@@ -90,8 +90,8 @@ export default function TicTacToeBoard({ gameState, onMove, onStart, onReset, on
         gridTemplateColumns: 'repeat(3, 1fr)',
         gridTemplateRows: 'repeat(3, 1fr)',
         gap: 6,
-        width: 'min(280px, 80vw)',
-        height: 'min(280px, 80vw)',
+        width: 'min(280px, 55vh, 80vw)',
+        height: 'min(280px, 55vh, 80vw)',
         aspectRatio: '1',
       }}>
         {board.map((cell, index) => {

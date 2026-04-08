@@ -73,8 +73,8 @@ export default function MemoryMatchBoard({ gameState, onMove, onStart, onReset, 
         gridTemplateColumns: 'repeat(4, 1fr)',
         gridTemplateRows: 'repeat(4, 1fr)',
         gap: 8,
-        width: 'min(320px, 80vw)',
-        height: 'min(320px, 80vw)',
+        width: 'min(320px, 55vh, 80vw)',
+        height: 'min(320px, 55vh, 80vw)',
         aspectRatio: '1',
       }}>
         {board.map((card, index) => {
