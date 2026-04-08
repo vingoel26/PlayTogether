@@ -4,6 +4,8 @@ import PrimaryButton from '../ui/PrimaryButton.jsx';
 import InputField from '../ui/InputField.jsx';
 
 const SERVER_URL = import.meta.env.VITE_SERVER_URL || '';
+// In production, if VITE_SERVER_URL is missing, we assume the server is on the same domain or we use auto-detection
+const FINAL_SERVER_URL = SERVER_URL || (window.location.hostname === 'localhost' ? 'http://localhost:3001' : window.location.origin);
 
 /**
  * LandingPage — Google Meet-inspired landing page
@@ -20,7 +22,7 @@ export default function LandingPage() {
     setLoading(true);
     setError('');
     try {
-      const res = await fetch(`${SERVER_URL}/api/rooms`, { method: 'POST' });
+      const res = await fetch(`${FINAL_SERVER_URL}/api/rooms`, { method: 'POST' });
       const data = await res.json();
       if (data.code) {
         navigate(`/prejoin/${data.code}`);

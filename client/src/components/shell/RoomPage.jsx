@@ -54,8 +54,9 @@ export default function RoomPage() {
     let mounted = true;
     const fetchToken = async () => {
       try {
-        const SERVER_URL = import.meta.env.VITE_SERVER_URL || 'http://localhost:3001';
-        const res = await fetch(`${SERVER_URL}/api/livekit/token`, {
+        const SERVER_ENV = import.meta.env.VITE_SERVER_URL || '';
+        const FINAL_SERVER_URL = SERVER_ENV || (window.location.hostname === 'localhost' ? 'http://localhost:3001' : window.location.origin);
+        const res = await fetch(`${FINAL_SERVER_URL}/api/livekit/token`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ 

@@ -1,7 +1,8 @@
 import { useEffect, useRef, useCallback, useState } from 'react';
 import { io } from 'socket.io-client';
 
-const SERVER_URL = import.meta.env.VITE_SERVER_URL || 'http://localhost:3001';
+const SERVER_ENV = import.meta.env.VITE_SERVER_URL || '';
+const SERVER_URL = SERVER_ENV || (window.location.hostname === 'localhost' ? 'http://localhost:3001' : window.location.origin);
 
 // Global singleton socket instance
 let globalSocket = null;
