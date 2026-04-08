@@ -8,7 +8,7 @@ import { useSocket } from '../../hooks/useSocket.js';
 
 export default function WatchPanel() {
     const playerRef = useRef(null);
-    const { watchState, loadUrl, syncDrift, isSynced, play, pause, seek } = useWatchSync(playerRef);
+    const { watchState, loadUrl, enqueueUrl, removeQueuedUrl, playNext, syncDrift, isSynced, play, pause, seek } = useWatchSync(playerRef);
     const [tempUrl, setTempUrl] = useState('');
     
     const { hostId } = useRoom();
@@ -70,6 +70,7 @@ export default function WatchPanel() {
                         play={play}
                         pause={pause}
                         seek={seek}
+                        playNext={playNext}
                     />
                 </div>
                 
@@ -93,7 +94,11 @@ export default function WatchPanel() {
                 
                 {/* Collapsible Queue (Right) */}
                 <div className="absolute top-0 right-0 w-[280px] h-full translate-x-full group-hover:translate-x-0 transition-transform duration-300 shadow-2xl flex flex-col" style={{ background: 'var(--color-surface-hover)' }}>
-                    <QueuePanel loadUrl={loadUrl} />
+                    <QueuePanel 
+                        queue={watchState.queue || []} 
+                        enqueueUrl={enqueueUrl} 
+                        removeQueuedUrl={removeQueuedUrl} 
+                    />
                 </div>
             </div>
         </div>

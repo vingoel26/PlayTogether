@@ -16,7 +16,8 @@ export function useWatchSync(playerRef, duration) {
         playing: false,
         currentTime: 0,
         updatedAt: Date.now(),
-        serverTime: Date.now()
+        serverTime: Date.now(),
+        queue: []
     });
 
     const [syncDrift, setSyncDrift] = useState(0);
@@ -100,13 +101,32 @@ export function useWatchSync(playerRef, duration) {
         emit('watch:load-url', { url });
     }, [isHost, emit]);
 
+    const enqueueUrl = useCallback((url, displayName) => {
+        emit('watch:queue-add', { url, displayName });
+    }, [emit]);
+
+    const removeQueuedUrl = useCallback((id) => {
+        emit('watch:queue-remove', { id });
+    }, [emit]);
+
+    const playNext = useCallback(() => {
+        if (!isHost) return;
+        emit('watch:queue-dequeue');
+    }, [isHost, emit]);
+
     return {
-        watchState,
+        watchState: {
+            ...watchState,
+            queue: watchState.queue || []
+        },
         syncDrift,
         isSynced,
         play,
         pause,
         seek,
-        loadUrl
+        loadUrl,
+        enqueueUrl,
+        removeQueuedUrl,
+        playNext
     };
 }

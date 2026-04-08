@@ -35,6 +35,9 @@ export class SocketRouter {
             socket.on('watch:pause', (data) => this.handleWatchPause(socket, data));
             socket.on('watch:seek', (data) => this.handleWatchSeek(socket, data));
             socket.on('watch:load-url', (data) => this.handleWatchLoadUrl(socket, data));
+            socket.on('watch:queue-add', (data) => this.handleWatchQueueAdd(socket, data));
+            socket.on('watch:queue-remove', (data) => this.handleWatchQueueRemove(socket, data));
+            socket.on('watch:queue-dequeue', () => this.handleWatchQueueDequeue(socket));
 
             // ── Disconnect ──
             socket.on('disconnect', (reason) => {
@@ -288,5 +291,36 @@ export class SocketRouter {
         engine.loadUrl(url);
         this.io.to(roomCode).emit('watch:state-update', engine.getState());
         console.log(`📺 Video URL loaded in room ${roomCode}: ${url}`);
+    }
+
+    handleWatchQueueAdd(socket, { url, displayName }) {
+        const roomCode = socket.roomCode;
+        if (!roomCode) return; // Anyone can add to queue
+
+        const engine = this._getOrCreateWatchEngine(roomCode);
+        engine.enqueue(url, displayName);
+        this.io.to(roomCode).emit('watch:state-update', engine.getState());
+        console.log(`➕ Video URL queued in room ${roomCode}: ${url}`);
+    }
+
+    handleWatchQueueRemove(socket, { id }) {
+        const roomCode = socket.roomCode;
+        if (!roomCode) return;
+
+        const engine = this._getOrCreateWatchEngine(roomCode);
+        engine.removeQueueItem(id);
+        this.io.to(roomCode).emit('watch:state-update', engine.getState());
+    }
+
+    handleWatchQueueDequeue(socket) {
+        const roomCode = socket.roomCode;
+        if (!roomCode || !this._verifyHost(socket, roomCode)) return;
+
+        const engine = this._getOrCreateWatchEngine(roomCode);
+        const item = engine.dequeue();
+        if (item) {
+            this.io.to(roomCode).emit('watch:state-update', engine.getState());
+            console.log(`⏯️ Video dequeued in room ${roomCode}: ${item.url}`);
+        }
     }
 }

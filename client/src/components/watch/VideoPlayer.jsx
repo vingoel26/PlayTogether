@@ -11,7 +11,7 @@ import SeekBar from './SeekBar.jsx';
 // Extract default to handle Vite CommonJS import mismatch
 const PlayerComponent = ReactPlayer.default || ReactPlayer;
 
-export default function VideoPlayer({ playerRef, watchState, syncDrift, isSynced, play, pause, seek }) {
+export default function VideoPlayer({ playerRef, watchState, syncDrift, isSynced, play, pause, seek, playNext }) {
     const { hostId } = useRoom();
     const { socket } = useSocket();
     const isHost = socket?.id === hostId;
@@ -99,6 +99,7 @@ export default function VideoPlayer({ playerRef, watchState, syncDrift, isSynced
                 onPlay={() => { if (isHost && !playing) play(playerRef.current?.getCurrentTime() || 0); }}
                 onPause={() => { if (isHost && playing) pause(playerRef.current?.getCurrentTime() || 0); }}
                 onSeek={(seconds) => { if (isHost) seek(seconds); }}
+                onEnded={() => { if (isHost) playNext(); }}
                 onReady={() => console.log('Video Ready!')}
                 onStart={() => console.log('Video Started!')}
                 onError={(e) => console.error('ReactPlayer Error:', e)}
