@@ -6,7 +6,8 @@
     "scripts": {
         "dev": "nodemon src/index.js",
         "start": "node src/index.js",
-        "lint": "eslint src/"
+        "lint": "eslint src/",
+        "build": "echo 'No build step required for server'"
     },
     "dependencies": {
         "cors": "^2.8.5",
