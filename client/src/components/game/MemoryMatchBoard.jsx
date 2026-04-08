@@ -86,6 +86,7 @@ export default function MemoryMatchBoard({ gameState, onMove, onStart, onReset, 
               key={index}
               onClick={() => canClick && onMove({ cardIndex: index })}
               disabled={!canClick}
+              className={canClick ? 'hover:-translate-y-1 transition-transform duration-150 hover:shadow-lg' : ''}
               style={{
                 perspective: '1000px',
                 background: 'transparent',

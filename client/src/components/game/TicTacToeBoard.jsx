@@ -101,6 +101,7 @@ export default function TicTacToeBoard({ gameState, onMove, onStart, onReset, on
               key={index}
               onClick={() => canClick && onMove({ cellIndex: index })}
               disabled={!canClick}
+              className={canClick ? 'hover:-translate-y-1 transition-transform duration-150 hover:shadow-lg' : ''}
               style={{
                 background: cell ? '#3C4043' : '#2D2E31',
                 border: '2px solid var(--color-control-bar)',
