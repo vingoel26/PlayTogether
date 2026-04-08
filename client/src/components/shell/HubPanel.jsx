@@ -1,3 +1,4 @@
+import React from 'react';
 import Tooltip from '../ui/Tooltip.jsx';
 import TicTacToeBoard from '../game/TicTacToeBoard.jsx';
 import MemoryMatchBoard from '../game/MemoryMatchBoard.jsx';
@@ -5,6 +6,7 @@ import QuickMathBoard from '../game/QuickMathBoard.jsx';
 import RPSBoard from '../game/RPSBoard.jsx';
 import WordScrambleBoard from '../game/WordScrambleBoard.jsx';
 import GameSelector from '../game/GameSelector.jsx';
+import WatchPanel from '../watch/WatchPanel.jsx';
 import { useGameSync } from '../../hooks/useGameSync.js';
 
 /**
@@ -104,18 +106,7 @@ export default function HubPanel({ activeHub, onClose }) {
         {activeHub === 'games' ? (
             renderGameContent()
         ) : (
-          <div style={{
-            height: '100%', display: 'flex', flexDirection: 'column',
-            alignItems: 'center', justifyContent: 'center',
-            color: 'var(--color-text-on-dark-dim)', textAlign: 'center',
-            padding: 24, gap: 16,
-          }}>
-            <span className="material-symbols-outlined" style={{ fontSize: 48, opacity: 0.5 }}>smart_display</span>
-            <div>
-              <h3 style={{ margin: '0 0 8px 0', color: 'var(--color-text-on-dark)' }}>Watch Party</h3>
-              <p style={{ margin: 0, fontSize: 13, maxWidth: 260 }}>Coming soon in Phase E!</p>
-            </div>
-          </div>
+            <WatchPanel />
         )}
       </div>
     </div>

@@ -1,5 +1,6 @@
 import { RoomManager } from '../services/RoomManager.js';
 import { GameFactory } from '../game/GameFactory.js';
+import { WatchSyncEngine } from '../sync/WatchSyncEngine.js';
 
 /**
  * SocketRouter — Central mediator for all Socket.io events
@@ -10,6 +11,7 @@ export class SocketRouter {
         this.io = io;
         this.roomManager = new RoomManager();
         this.activeGames = new Map(); // roomCode -> BaseGame instance
+        this.activeWatches = new Map(); // roomCode -> WatchSyncEngine instance
     }
 
     init() {
@@ -26,6 +28,13 @@ export class SocketRouter {
             socket.on('game:start', (data) => this.handleGameStart(socket, data));
             socket.on('game:move', (data) => this.handleGameMove(socket, data));
             socket.on('game:reset', () => this.handleGameReset(socket));
+
+            // ── Watch Events ──
+            socket.on('watch:sync', (data) => this.handleWatchSync(socket, data));
+            socket.on('watch:play', (data) => this.handleWatchPlay(socket, data));
+            socket.on('watch:pause', (data) => this.handleWatchPause(socket, data));
+            socket.on('watch:seek', (data) => this.handleWatchSeek(socket, data));
+            socket.on('watch:load-url', (data) => this.handleWatchLoadUrl(socket, data));
 
             // ── Disconnect ──
             socket.on('disconnect', (reason) => {
@@ -209,5 +218,75 @@ export class SocketRouter {
         game.reset();
         this.io.to(roomCode).emit('game:state-update', game.getState());
         console.log(`🔄 Game reset in room ${roomCode}`);
+    }
+
+    // ── Watch Handlers ──
+
+    _getOrCreateWatchEngine(roomCode) {
+        if (!this.activeWatches.has(roomCode)) {
+            this.activeWatches.set(roomCode, new WatchSyncEngine(roomCode));
+        }
+        return this.activeWatches.get(roomCode);
+    }
+
+    _verifyHost(socket, roomCode) {
+        const room = this.roomManager.getRoom(roomCode);
+        if (!room) return false;
+        if (room.hostId !== socket.id) {
+            socket.emit('room:error', { message: 'Only the host can control playback' });
+            return false;
+        }
+        return true;
+    }
+
+    handleWatchSync(socket, data) {
+        const roomCode = socket.roomCode;
+        if (!roomCode || !this._verifyHost(socket, roomCode)) return;
+
+        const engine = this._getOrCreateWatchEngine(roomCode);
+        engine.sync(data);
+
+        // Broadcast to everyone else (avoid latency loop for the host)
+        socket.to(roomCode).emit('watch:state-update', engine.getState());
+    }
+
+    handleWatchPlay(socket, { currentTime }) {
+        const roomCode = socket.roomCode;
+        if (!roomCode || !this._verifyHost(socket, roomCode)) return;
+
+        const engine = this._getOrCreateWatchEngine(roomCode);
+        engine.play(currentTime);
+        this.io.to(roomCode).emit('watch:state-update', engine.getState());
+        console.log(`▶️ Video playing in room ${roomCode} at ${currentTime}s`);
+    }
+
+    handleWatchPause(socket, { currentTime }) {
+        const roomCode = socket.roomCode;
+        if (!roomCode || !this._verifyHost(socket, roomCode)) return;
+
+        const engine = this._getOrCreateWatchEngine(roomCode);
+        engine.pause(currentTime);
+        this.io.to(roomCode).emit('watch:state-update', engine.getState());
+        console.log(`⏸️ Video paused in room ${roomCode} at ${currentTime}s`);
+    }
+
+    handleWatchSeek(socket, { currentTime }) {
+        const roomCode = socket.roomCode;
+        if (!roomCode || !this._verifyHost(socket, roomCode)) return;
+
+        const engine = this._getOrCreateWatchEngine(roomCode);
+        engine.seek(currentTime);
+        this.io.to(roomCode).emit('watch:state-update', engine.getState());
+        console.log(`⏭️ Video seeked to ${currentTime}s in room ${roomCode}`);
+    }
+
+    handleWatchLoadUrl(socket, { url }) {
+        const roomCode = socket.roomCode;
+        if (!roomCode || !this._verifyHost(socket, roomCode)) return;
+
+        const engine = this._getOrCreateWatchEngine(roomCode);
+        engine.loadUrl(url);
+        this.io.to(roomCode).emit('watch:state-update', engine.getState());
+        console.log(`📺 Video URL loaded in room ${roomCode}: ${url}`);
     }
 }
