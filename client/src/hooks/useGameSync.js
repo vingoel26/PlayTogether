@@ -33,10 +33,15 @@ export function useGameSync() {
         emit('game:reset');
     }, [emit]);
 
+    const exitGame = useCallback(() => {
+        setGameState(null);
+    }, []);
+
     return {
         gameState,
         sendMove,
         startGame,
         resetGame,
+        exitGame,
     };
 }

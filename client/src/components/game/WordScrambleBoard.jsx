@@ -1,13 +1,14 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useSocket } from '../../hooks/useSocket.js';
 import { useRoom } from '../../contexts/RoomContext.jsx';
-import Avatar from '../ui/Avatar.jsx';
+import ScoreHeader from './ScoreHeader.jsx';
+import GameOverOverlay from './GameOverOverlay.jsx';
 
 /**
  * WordScrambleBoard — Unscramble the word game board
  * Type your guess, use hints (private, with penalty), race against time
  */
-export default function WordScrambleBoard({ gameState, onMove, onStart, onReset }) {
+export default function WordScrambleBoard({ gameState, onMove, onStart, onReset, onExit }) {
   const { socket } = useSocket();
   const { hostId } = useRoom();
   const myId = socket?.id;
@@ -142,50 +143,25 @@ export default function WordScrambleBoard({ gameState, onMove, onStart, onReset 
       height: '100%', display: 'flex', flexDirection: 'column',
       alignItems: 'center', justifyContent: 'center', gap: 16,
       color: 'var(--color-text-on-dark)', padding: 16,
+      position: 'relative',
     }}>
 
-      {/* Player Score Bar */}
-      <div style={{ display: 'flex', gap: 32, alignItems: 'center', fontSize: 14 }}>
-        {players.map(p => (
-          <div key={p.id} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <Avatar name={p.displayName} id={p.id} size={28} />
-            <span style={{ fontWeight: 500 }}>{p.id === myId ? 'You' : p.displayName}</span>
-            <span style={{
-              background: 'rgba(255,255,255,0.1)', color: 'white',
-              borderRadius: 4, padding: '2px 10px', fontSize: 13, fontWeight: 700,
-            }}>
-              {scores[p.id] || 0}
-            </span>
-          </div>
-        ))}
-      </div>
+      {/* Shared Score Header */}
+      <ScoreHeader
+        players={players}
+        scores={scores}
+        roundInfo={!isComplete ? `Round ${roundNumber}/${totalRounds}` : undefined}
+      />
 
       {isComplete ? (
-        /* Game Over */
-        <div style={{
-          display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 20, marginTop: 16,
-        }}>
-          <span className="material-symbols-outlined" style={{ fontSize: 56, color: '#0F9D58' }}>emoji_events</span>
-          <h2 style={{ margin: 0, fontSize: 24 }}>{resultText}</h2>
-          <div style={{ fontSize: 14, color: 'var(--color-text-on-dark-dim)' }}>
-            Final: {players.map(p => `${p.displayName}: ${scores[p.id] || 0}`).join(' • ')}
-          </div>
-          {isHost && (
-            <button
-              onClick={onReset}
-              style={{
-                padding: '10px 28px', borderRadius: 'var(--radius-pill)',
-                background: 'var(--color-blue)', color: 'white', border: 'none',
-                fontSize: 14, fontWeight: 500, cursor: 'pointer',
-                transition: 'background 150ms ease',
-              }}
-              onMouseEnter={e => e.currentTarget.style.background = 'var(--color-blue-hover)'}
-              onMouseLeave={e => e.currentTarget.style.background = 'var(--color-blue)'}
-            >
-              🔄 Rematch
-            </button>
-          )}
-        </div>
+        <GameOverOverlay
+          players={players}
+          scores={scores}
+          winnerId={winnerId}
+          isHost={isHost}
+          onReset={onReset}
+          onExit={onExit}
+        />
       ) : (
         /* Active Game */
         <>

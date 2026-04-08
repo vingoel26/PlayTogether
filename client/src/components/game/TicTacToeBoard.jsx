@@ -1,12 +1,13 @@
 import { useSocket } from '../../hooks/useSocket.js';
 import { useRoom } from '../../contexts/RoomContext.jsx';
-import Avatar from '../ui/Avatar.jsx';
+import ScoreHeader from './ScoreHeader.jsx';
+import GameOverOverlay from './GameOverOverlay.jsx';
 
 /**
  * TicTacToeBoard — Interactive 3×3 Tic Tac Toe game board
  * Renders inside the HubPanel when a game is active
  */
-export default function TicTacToeBoard({ gameState, onMove, onStart, onReset }) {
+export default function TicTacToeBoard({ gameState, onMove, onStart, onReset, onExit }) {
   const { socket } = useSocket();
   const { hostId } = useRoom();
   const myId = socket?.id;
@@ -52,15 +53,12 @@ export default function TicTacToeBoard({ gameState, onMove, onStart, onReset }) 
   const isPlayer = !!myMark;
   const isComplete = state === 'complete';
 
-  // Determine winner display name
-  let resultText = '';
-  if (isComplete) {
-    if (winnerId === 'draw') {
-      resultText = "It's a draw!";
-    } else {
-      const winner = players.find(p => p.id === winnerId);
-      resultText = winnerId === myId ? 'You won! 🎉' : `${winner?.displayName} wins!`;
-    }
+  // Turn indicator text
+  let turnText = '';
+  if (!isComplete) {
+    turnText = isPlayer
+      ? (isMyTurn ? "Your turn!" : "Opponent's turn...")
+      : `${players.find(p => p.id === currentPlayerId)?.displayName}'s turn`;
   }
 
   return (
@@ -68,40 +66,23 @@ export default function TicTacToeBoard({ gameState, onMove, onStart, onReset }) 
       height: '100%', display: 'flex', flexDirection: 'column',
       alignItems: 'center', justifyContent: 'center', gap: 20,
       color: 'var(--color-text-on-dark)', padding: 16,
+      position: 'relative',
     }}>
       
-      {/* Player Info Bar */}
-      <div style={{ display: 'flex', gap: 24, alignItems: 'center', fontSize: 14 }}>
-        {players.map(p => (
-          <div key={p.id} style={{
-            display: 'flex', alignItems: 'center', gap: 8,
-            opacity: isComplete ? 1 : (currentPlayerId === p.id ? 1 : 0.5),
-            transition: 'opacity 200ms ease',
-          }}>
-            <Avatar name={p.displayName} id={p.id} size={28} />
-            <span style={{ fontWeight: 500 }}>{p.id === myId ? 'You' : p.displayName}</span>
-            <span style={{
-              background: marks[p.id] === 'X' ? 'var(--color-blue)' : 'var(--color-red)',
-              color: 'white', borderRadius: 4, padding: '2px 8px', fontSize: 12, fontWeight: 600,
-            }}>
-              {marks[p.id]}
-            </span>
-            <span style={{ color: 'var(--color-text-on-dark-dim)', fontSize: 12 }}>
-              Score: {scores[p.id] || 0}
-            </span>
-          </div>
-        ))}
-      </div>
+      {/* Shared Score Header */}
+      <ScoreHeader
+        players={players}
+        scores={scores}
+        marks={marks}
+        currentPlayerId={currentPlayerId}
+      />
 
-      {/* Turn / Result Indicator */}
-      <div style={{ fontSize: 15, fontWeight: 500, minHeight: 24 }}>
-        {isComplete
-          ? resultText
-          : isPlayer
-            ? (isMyTurn ? "Your turn!" : "Opponent's turn...")
-            : `${players.find(p => p.id === currentPlayerId)?.displayName}'s turn`
-        }
-      </div>
+      {/* Turn Indicator */}
+      {!isComplete && (
+        <div style={{ fontSize: 15, fontWeight: 500, minHeight: 24 }}>
+          {turnText}
+        </div>
+      )}
 
       {/* The Board */}
       <div style={{
@@ -132,7 +113,6 @@ export default function TicTacToeBoard({ gameState, onMove, onStart, onReset }) 
                 fontWeight: 700,
                 color: cell === 'X' ? '#8AB4F8' : cell === 'O' ? '#F28B82' : 'transparent',
                 transition: 'background 120ms ease, transform 100ms ease',
-                transform: cell ? 'scale(1)' : 'scale(1)',
               }}
               onMouseEnter={e => { if (canClick) e.currentTarget.style.background = '#4A4E51'; }}
               onMouseLeave={e => { if (canClick) e.currentTarget.style.background = '#2D2E31'; }}
@@ -143,21 +123,16 @@ export default function TicTacToeBoard({ gameState, onMove, onStart, onReset }) 
         })}
       </div>
 
-      {/* Rematch Button (host only, shown after game ends) */}
-      {isComplete && isHost && (
-        <button
-          onClick={onReset}
-          style={{
-            padding: '10px 28px', borderRadius: 'var(--radius-pill)',
-            background: 'var(--color-blue)', color: 'white', border: 'none',
-            fontSize: 14, fontWeight: 500, cursor: 'pointer', marginTop: 8,
-            transition: 'background 150ms ease',
-          }}
-          onMouseEnter={e => e.currentTarget.style.background = 'var(--color-blue-hover)'}
-          onMouseLeave={e => e.currentTarget.style.background = 'var(--color-blue)'}
-        >
-          🔄 Rematch
-        </button>
+      {/* Shared Game Over Overlay */}
+      {isComplete && (
+        <GameOverOverlay
+          players={players}
+          scores={scores}
+          winnerId={winnerId}
+          isHost={isHost}
+          onReset={onReset}
+          onExit={onExit}
+        />
       )}
     </div>
   );

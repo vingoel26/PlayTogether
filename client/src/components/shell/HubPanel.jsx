@@ -12,7 +12,7 @@ import { useGameSync } from '../../hooks/useGameSync.js';
  * Takes up 60% of the screen for Games, 70% for Watch
  */
 export default function HubPanel({ activeHub, onClose }) {
-  const { gameState, sendMove, startGame, resetGame } = useGameSync();
+  const { gameState, sendMove, startGame, resetGame, exitGame } = useGameSync();
 
   if (!activeHub) return null;
 
@@ -21,60 +21,19 @@ export default function HubPanel({ activeHub, onClose }) {
       return <GameSelector onStart={startGame} />;
     }
 
-    if (gameState.type === 'tictactoe') {
-      return (
-        <TicTacToeBoard
-          gameState={gameState}
-          onMove={sendMove}
-          onStart={startGame}   // Just in case
-          onReset={resetGame}
-        />
-      );
-    }
+    const commonProps = {
+      gameState,
+      onMove: sendMove,
+      onStart: startGame,
+      onReset: resetGame,
+      onExit: exitGame,
+    };
 
-    if (gameState.type === 'memory') {
-      return (
-        <MemoryMatchBoard
-          gameState={gameState}
-          onMove={sendMove}
-          onStart={startGame}
-          onReset={resetGame}
-        />
-      );
-    }
-
-    if (gameState.type === 'quickmath') {
-      return (
-        <QuickMathBoard
-          gameState={gameState}
-          onMove={sendMove}
-          onStart={startGame}
-          onReset={resetGame}
-        />
-      );
-    }
-
-    if (gameState.type === 'rps') {
-      return (
-        <RPSBoard
-          gameState={gameState}
-          onMove={sendMove}
-          onStart={startGame}
-          onReset={resetGame}
-        />
-      );
-    }
-
-    if (gameState.type === 'wordscramble') {
-      return (
-        <WordScrambleBoard
-          gameState={gameState}
-          onMove={sendMove}
-          onStart={startGame}
-          onReset={resetGame}
-        />
-      );
-    }
+    if (gameState.type === 'tictactoe') return <TicTacToeBoard {...commonProps} />;
+    if (gameState.type === 'memory') return <MemoryMatchBoard {...commonProps} />;
+    if (gameState.type === 'quickmath') return <QuickMathBoard {...commonProps} />;
+    if (gameState.type === 'rps') return <RPSBoard {...commonProps} />;
+    if (gameState.type === 'wordscramble') return <WordScrambleBoard {...commonProps} />;
 
     return null;
   };

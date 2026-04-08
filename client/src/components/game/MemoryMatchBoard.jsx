@@ -1,19 +1,20 @@
 import { useEffect } from 'react';
 import { useSocket } from '../../hooks/useSocket.js';
 import { useRoom } from '../../contexts/RoomContext.jsx';
-import Avatar from '../ui/Avatar.jsx';
+import ScoreHeader from './ScoreHeader.jsx';
+import GameOverOverlay from './GameOverOverlay.jsx';
 
 /**
  * MemoryMatchBoard — Interactive card flipping game
  * 4x4 Grid of randomized Emojis
  */
-export default function MemoryMatchBoard({ gameState, onMove, onStart, onReset }) {
+export default function MemoryMatchBoard({ gameState, onMove, onStart, onReset, onExit }) {
   const { socket } = useSocket();
   const { hostId } = useRoom();
   const myId = socket?.id;
   const isHost = myId === hostId;
 
-  // Pre-game placeholder handled by GameSelector now, but just in case:
+  // Pre-game placeholder handled by GameSelector now
   if (!gameState || gameState.state === 'lobby') return null;
 
   const { board, currentPlayerId, players, winnerId, scores, state, isWaitingForClear } = gameState;
@@ -31,15 +32,14 @@ export default function MemoryMatchBoard({ gameState, onMove, onStart, onReset }
     }
   }, [isWaitingForClear, isMyTurn, onMove]);
 
-  // Determine winner display name
-  let resultText = '';
-  if (isComplete) {
-    if (winnerId === 'draw') {
-      resultText = "It's a draw!";
-    } else {
-      const winner = players.find(p => p.id === winnerId);
-      resultText = winnerId === myId ? 'You won! 🎉' : `${winner?.displayName} wins!`;
-    }
+  // Turn indicator
+  let turnText = '';
+  if (!isComplete) {
+    turnText = isWaitingForClear
+      ? 'No match...'
+      : isPlayer
+          ? (isMyTurn ? "Your turn! Pick two cards." : "Opponent is picking...")
+          : `${players.find(p => p.id === currentPlayerId)?.displayName}'s turn`;
   }
 
   return (
@@ -47,36 +47,25 @@ export default function MemoryMatchBoard({ gameState, onMove, onStart, onReset }
       height: '100%', display: 'flex', flexDirection: 'column',
       alignItems: 'center', justifyContent: 'center', gap: 20,
       color: 'var(--color-text-on-dark)', padding: 16,
+      position: 'relative',
     }}>
       
-      {/* Player Info Bar */}
-      <div style={{ display: 'flex', gap: 24, alignItems: 'center', fontSize: 14 }}>
-        {players.map(p => (
-          <div key={p.id} style={{
-            display: 'flex', alignItems: 'center', gap: 8,
-            opacity: isComplete ? 1 : (currentPlayerId === p.id ? 1 : 0.5),
-            transition: 'opacity 200ms ease',
-          }}>
-            <Avatar name={p.displayName} id={p.id} size={28} />
-            <span style={{ fontWeight: 500 }}>{p.id === myId ? 'You' : p.displayName}</span>
-            <span style={{ color: 'var(--color-text-on-dark-dim)', fontSize: 12 }}>
-              Pairs: <strong style={{color: 'white'}}>{scores[p.id] || 0}</strong>
-            </span>
-          </div>
-        ))}
-      </div>
+      {/* Shared Score Header */}
+      <ScoreHeader
+        players={players}
+        scores={scores}
+        currentPlayerId={currentPlayerId}
+      />
 
       {/* Turn Indicator */}
-      <div style={{ fontSize: 15, fontWeight: 500, minHeight: 24, color: isWaitingForClear ? 'var(--color-red)' : 'white' }}>
-        {isComplete
-          ? resultText
-          : isWaitingForClear
-            ? 'No match...'
-            : isPlayer
-                ? (isMyTurn ? "Your turn! Pick two cards." : "Opponent is picking...")
-                : `${players.find(p => p.id === currentPlayerId)?.displayName}'s turn`
-        }
-      </div>
+      {!isComplete && (
+        <div style={{
+          fontSize: 15, fontWeight: 500, minHeight: 24,
+          color: isWaitingForClear ? 'var(--color-red)' : 'white',
+        }}>
+          {turnText}
+        </div>
+      )}
 
       {/* 4x4 Card Grid */}
       <div style={{
@@ -140,21 +129,16 @@ export default function MemoryMatchBoard({ gameState, onMove, onStart, onReset }
         })}
       </div>
 
-      {/* Rematch Button */}
-      {isComplete && isHost && (
-        <button
-          onClick={onReset}
-          style={{
-            padding: '10px 28px', borderRadius: 'var(--radius-pill)',
-            background: 'var(--color-blue)', color: 'white', border: 'none',
-            fontSize: 14, fontWeight: 500, cursor: 'pointer', marginTop: 12,
-            transition: 'background 150ms ease',
-          }}
-          onMouseEnter={e => e.currentTarget.style.background = 'var(--color-blue-hover)'}
-          onMouseLeave={e => e.currentTarget.style.background = 'var(--color-blue)'}
-        >
-          🔄 Rematch
-        </button>
+      {/* Shared Game Over Overlay */}
+      {isComplete && (
+        <GameOverOverlay
+          players={players}
+          scores={scores}
+          winnerId={winnerId}
+          isHost={isHost}
+          onReset={onReset}
+          onExit={onExit}
+        />
       )}
     </div>
   );

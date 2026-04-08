@@ -2,6 +2,8 @@ import { useState, useEffect, useCallback } from 'react';
 import { useSocket } from '../../hooks/useSocket.js';
 import { useRoom } from '../../contexts/RoomContext.jsx';
 import Avatar from '../ui/Avatar.jsx';
+import ScoreHeader from './ScoreHeader.jsx';
+import GameOverOverlay from './GameOverOverlay.jsx';
 
 const CHOICE_EMOJI = {
   rock: '🪨',
@@ -19,7 +21,7 @@ const CHOICE_LABELS = {
  * RPSBoard — Rock Paper Scissors game board
  * Simultaneous choice, reveal, best-of-5
  */
-export default function RPSBoard({ gameState, onMove, onStart, onReset }) {
+export default function RPSBoard({ gameState, onMove, onStart, onReset, onExit }) {
   const { socket } = useSocket();
   const { hostId } = useRoom();
   const myId = socket?.id;
@@ -112,74 +114,25 @@ export default function RPSBoard({ gameState, onMove, onStart, onReset }) {
       height: '100%', display: 'flex', flexDirection: 'column',
       alignItems: 'center', justifyContent: 'center', gap: 20,
       color: 'var(--color-text-on-dark)', padding: 16,
+      position: 'relative',
     }}>
 
-      {/* Player Score Bar */}
-      <div style={{ display: 'flex', gap: 32, alignItems: 'center', fontSize: 14 }}>
-        {players.map(p => (
-          <div key={p.id} style={{
-            display: 'flex', alignItems: 'center', gap: 8,
-          }}>
-            <Avatar name={p.displayName} id={p.id} size={28} />
-            <span style={{ fontWeight: 500 }}>{p.id === myId ? 'You' : p.displayName}</span>
-            <span style={{
-              background: 'rgba(255,255,255,0.1)', color: 'white',
-              borderRadius: 4, padding: '2px 10px', fontSize: 13, fontWeight: 700,
-            }}>
-              {scores[p.id] || 0}
-            </span>
-          </div>
-        ))}
-      </div>
-
-      {/* Round Indicator */}
-      <div style={{ fontSize: 13, color: 'var(--color-text-on-dark-dim)' }}>
-        Round {roundNumber}/{totalRounds} — Best of {totalRounds}
-      </div>
+      {/* Shared Score Header */}
+      <ScoreHeader
+        players={players}
+        scores={scores}
+        roundInfo={`Round ${roundNumber}/${totalRounds} — Best of ${totalRounds}`}
+      />
 
       {isComplete ? (
-        /* Game Over */
-        <div style={{
-          display: 'flex', flexDirection: 'column', alignItems: 'center',
-          gap: 20, marginTop: 8,
-        }}>
-          <span className="material-symbols-outlined" style={{ fontSize: 56, color: '#9C27B0' }}>emoji_events</span>
-          <h2 style={{ margin: 0, fontSize: 24 }}>{gameResultText}</h2>
-          <div style={{ fontSize: 14, color: 'var(--color-text-on-dark-dim)' }}>
-            Final: {players.map(p => `${p.displayName}: ${scores[p.id] || 0}`).join(' • ')}
-          </div>
-
-          {/* Round History */}
-          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'center' }}>
-            {roundHistory.map((rh, i) => (
-              <div key={i} style={{
-                background: 'rgba(255,255,255,0.05)', borderRadius: 8, padding: '6px 12px',
-                fontSize: 12, display: 'flex', gap: 6, alignItems: 'center',
-              }}>
-                <span>R{rh.round}</span>
-                <span>{CHOICE_EMOJI[rh.choices[players[0].id]]}</span>
-                <span style={{ color: 'var(--color-text-on-dark-dim)' }}>vs</span>
-                <span>{CHOICE_EMOJI[rh.choices[players[1].id]]}</span>
-              </div>
-            ))}
-          </div>
-
-          {isHost && (
-            <button
-              onClick={onReset}
-              style={{
-                padding: '10px 28px', borderRadius: 'var(--radius-pill)',
-                background: 'var(--color-blue)', color: 'white', border: 'none',
-                fontSize: 14, fontWeight: 500, cursor: 'pointer',
-                transition: 'background 150ms ease',
-              }}
-              onMouseEnter={e => e.currentTarget.style.background = 'var(--color-blue-hover)'}
-              onMouseLeave={e => e.currentTarget.style.background = 'var(--color-blue)'}
-            >
-              🔄 Rematch
-            </button>
-          )}
-        </div>
+        <GameOverOverlay
+          players={players}
+          scores={scores}
+          winnerId={winnerId}
+          isHost={isHost}
+          onReset={onReset}
+          onExit={onExit}
+        />
       ) : phase === 'reveal' ? (
         /* Reveal Phase */
         <div style={{
