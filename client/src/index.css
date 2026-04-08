@@ -98,6 +98,13 @@
   }
 }
 
+/* ── Global Focus Ring (keyboard only, invisible on mouse click) ── */
+:focus-visible {
+  outline: 2px solid #1857D9;
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
 /* ════════════════════════════════════════════════
    Global Reset & Base Styles
    ════════════════════════════════════════════════ */

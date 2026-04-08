@@ -58,6 +58,7 @@ export default function QueuePanel({ queue, enqueueUrl, removeQueuedUrl }) {
                                         <span>#{index + 1}</span>
                                         <button 
                                             onClick={() => removeQueuedUrl(item.id)}
+                                            aria-label={`Remove video ${index + 1} from queue`}
                                             style={{ background: 'transparent', border: 'none', color: 'var(--color-text-on-dark-dim)', cursor: 'pointer' }}
                                         >
                                             <span className="material-symbols-outlined" style={{ fontSize: 16 }}>close</span>
@@ -93,6 +94,7 @@ export default function QueuePanel({ queue, enqueueUrl, removeQueuedUrl }) {
                     <button 
                         type="submit"
                         disabled={!tempUrl.trim()}
+                        aria-label="Add URL to queue"
                         style={{
                             background: 'var(--color-blue)', color: 'white', border: 'none',
                             borderRadius: 6, padding: '0 16px', fontWeight: 600, cursor: tempUrl.trim() ? 'pointer' : 'not-allowed',

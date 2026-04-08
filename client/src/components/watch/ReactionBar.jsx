@@ -23,6 +23,7 @@ export default function ReactionBar() {
                 <button
                     key={emoji}
                     onClick={() => handleReact(emoji)}
+                    aria-label={`React with ${emoji}`}
                     className="hover:scale-125 transition-transform"
                     style={{
                         background: 'transparent', border: 'none',

@@ -85,7 +85,7 @@ export default function TicTacToeBoard({ gameState, onMove, onStart, onReset, on
       )}
 
       {/* The Board */}
-      <div style={{
+      <section aria-label="Tic Tac Toe game board" style={{
         display: 'grid',
         gridTemplateColumns: 'repeat(3, 1fr)',
         gridTemplateRows: 'repeat(3, 1fr)',
@@ -101,6 +101,7 @@ export default function TicTacToeBoard({ gameState, onMove, onStart, onReset, on
               key={index}
               onClick={() => canClick && onMove({ cellIndex: index })}
               disabled={!canClick}
+              aria-label={`Cell ${index + 1}, ${cell ? cell : 'empty'}`}
               className={canClick ? 'hover:-translate-y-1 transition-transform duration-150 hover:shadow-lg' : ''}
               style={{
                 background: cell ? '#3C4043' : '#2D2E31',
@@ -122,7 +123,7 @@ export default function TicTacToeBoard({ gameState, onMove, onStart, onReset, on
             </button>
           );
         })}
-      </div>
+      </section>
 
       {/* Shared Game Over Overlay */}
       {isComplete && (

@@ -68,7 +68,7 @@ export default function MemoryMatchBoard({ gameState, onMove, onStart, onReset, 
       )}
 
       {/* 4x4 Card Grid */}
-      <div style={{
+      <section aria-label="Memory Match game board" style={{
         display: 'grid',
         gridTemplateColumns: 'repeat(4, 1fr)',
         gridTemplateRows: 'repeat(4, 1fr)',
@@ -86,6 +86,7 @@ export default function MemoryMatchBoard({ gameState, onMove, onStart, onReset, 
               key={index}
               onClick={() => canClick && onMove({ cardIndex: index })}
               disabled={!canClick}
+              aria-label={card ? `Card ${index + 1}, ${card}` : `Card ${index + 1}, face down`}
               className={canClick ? 'hover:-translate-y-1 transition-transform duration-150 hover:shadow-lg' : ''}
               style={{
                 perspective: '1000px',
@@ -128,7 +129,7 @@ export default function MemoryMatchBoard({ gameState, onMove, onStart, onReset, 
             </button>
           );
         })}
-      </div>
+      </section>
 
       {/* Shared Game Over Overlay */}
       {isComplete && (
