@@ -531,8 +531,6 @@ Set environment variables in Vercel dashboard:
 ---
 
 ## future scope
-
-- [ ] **E6**: Production deployment hardening (HTTPS, CSP headers, rate limiting)
 - [ ] **Auth**: User accounts, persistent room history (Auth.js + PostgreSQL)
 - [ ] **Spectator Mode**: Join a room in view-only mode without a video tile
 - [ ] **Screen Share**: Leverage LiveKit's screen-share track for presentations
