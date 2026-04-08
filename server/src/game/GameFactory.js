@@ -1,5 +1,6 @@
 import { TicTacToe } from './TicTacToe.js';
 import { MemoryMatch } from './MemoryMatch.js';
+import { QuickMath } from './QuickMath.js';
 
 /**
  * GameFactory — Creates game instances by type string
@@ -12,6 +13,8 @@ export class GameFactory {
                 return new TicTacToe(roomCode, players);
             case 'memory':
                 return new MemoryMatch(roomCode, players);
+            case 'quickmath':
+                return new QuickMath(roomCode, players);
             default:
                 throw new Error(`Unknown game type: ${type}`);
         }
