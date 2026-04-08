@@ -2,6 +2,7 @@ import Tooltip from '../ui/Tooltip.jsx';
 import TicTacToeBoard from '../game/TicTacToeBoard.jsx';
 import MemoryMatchBoard from '../game/MemoryMatchBoard.jsx';
 import QuickMathBoard from '../game/QuickMathBoard.jsx';
+import RPSBoard from '../game/RPSBoard.jsx';
 import GameSelector from '../game/GameSelector.jsx';
 import { useGameSync } from '../../hooks/useGameSync.js';
 
@@ -44,6 +45,17 @@ export default function HubPanel({ activeHub, onClose }) {
     if (gameState.type === 'quickmath') {
       return (
         <QuickMathBoard
+          gameState={gameState}
+          onMove={sendMove}
+          onStart={startGame}
+          onReset={resetGame}
+        />
+      );
+    }
+
+    if (gameState.type === 'rps') {
+      return (
+        <RPSBoard
           gameState={gameState}
           onMove={sendMove}
           onStart={startGame}
