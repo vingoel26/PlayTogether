@@ -44,7 +44,7 @@ export default function LandingPage() {
     setLoading(true);
     setError('');
     try {
-      const res = await fetch(`${SERVER_URL}/api/rooms/${trimmed}`);
+      const res = await fetch(`${FINAL_SERVER_URL}/api/rooms/${trimmed}`);
       const data = await res.json();
       if (data.exists) {
         navigate(`/prejoin/${trimmed}`);

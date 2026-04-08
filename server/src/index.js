@@ -32,12 +32,12 @@ const CLIENT_URLS = clientEnv
 
 // Middleware
 app.use((req, res, next) => {
-    console.log(`📡 [${new Date().toISOString()}] ${req.method} ${req.url}`);
+    console.log(`📡 [${new Date().toISOString()}] ${req.method} ${req.url} - Origin: ${req.headers.origin}`);
     next();
 });
 
 app.use(cors({
-    origin: CLIENT_URLS,
+    origin: true, // Reflect the requesting origin
     credentials: true
 }));
 app.use(express.json());
@@ -59,7 +59,7 @@ app.get('/api/health', (req, res) => {
 // Socket.io setup
 const io = new Server(httpServer, {
     cors: {
-        origin: CLIENT_URLS,
+        origin: true, // Reflect the requesting origin
         methods: ['GET', 'POST'],
         credentials: true
     },

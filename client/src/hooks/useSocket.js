@@ -25,7 +25,7 @@ export function useSocket() {
                 reconnectionAttempts: Infinity,
                 reconnectionDelay: 1000,
                 reconnectionDelayMax: 30000,
-                transports: ['websocket', 'polling'],
+                transports: ['polling', 'websocket'],
             });
 
             // Attach global listeners
