@@ -69,6 +69,9 @@ export default function RoomPage() {
         if (mounted && data.token) setToken(data.token);
       } catch (err) {
         console.error('Failed to get LiveKit token:', err);
+        if (mounted) {
+            enqueueSnackbar('Failed to acquire secure media token (LiveKit)', 5000);
+        }
       }
     };
 
@@ -133,10 +136,25 @@ export default function RoomPage() {
     const unsub5 = on('room:error', (data) => {
       console.error('Room error:', data.message);
       enqueueSnackbar(data.message, 4000);
+      
+      // If room is full, kick them to the landing page
+      if (data.message.includes('full')) {
+          navigate('/', { replace: true });
+      }
     });
 
-    return () => { unsub1(); unsub2(); unsub3(); unsub4(); unsub5(); };
-  }, [isConnected, on, setParticipants, setHostId, setIsConnected, setActiveHub, enqueueSnackbar]);
+    const unsub6 = on('disconnect', () => {
+        enqueueSnackbar('Connection lost. Reconnecting...', 4000);
+    });
+
+    const unsub7 = on('connect', () => {
+        if (hasJoined) {
+            enqueueSnackbar('Restored connection to room', 3000);
+        }
+    });
+
+    return () => { unsub1(); unsub2(); unsub3(); unsub4(); unsub5(); unsub6(); unsub7(); };
+  }, [isConnected, on, setParticipants, setHostId, setIsConnected, setActiveHub, enqueueSnackbar, navigate, hasJoined]);
 
   // Leave room
   const handleLeave = useCallback(() => {

@@ -59,6 +59,11 @@ export class SocketRouter {
         }
 
         const room = this.roomManager.getRoom(roomCode);
+
+        if (room && room.participants.length >= 8) {
+            socket.emit('room:error', { message: 'Room is full (max 8 participants)' });
+            return;
+        }
         if (!room) {
             // Auto-create the room if it doesn't exist (created via REST earlier)
             this.roomManager.createRoom(roomCode);

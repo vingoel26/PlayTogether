@@ -16,6 +16,9 @@ export default function VideoTile({ participant }) {
   const isCameraEnabled = !isCamMuted;
   const isMicrophoneEnabled = !isMicMuted;
   
+  const camTrackPub = participant.getTrackPublication(Track.Source.Camera);
+  const isCamLoading = isCameraEnabled && (!camTrackPub?.isSubscribed && !participant.isLocal);
+  
   return (
     <div
       style={{
@@ -36,10 +39,15 @@ export default function VideoTile({ participant }) {
     >
       {/* Actual LiveKit Video Stream */}
       {isCameraEnabled ? (
-        <VideoTrack
-          trackRef={{ participant, source: Track.Source.Camera }}
-          style={{ width: '100%', height: '100%', objectFit: 'cover', transform: 'scaleX(-1)' }}
-        />
+        <>
+            {isCamLoading && (
+                <div style={{ position: 'absolute', inset: 0, background: 'rgba(255,255,255,0.05)', animation: 'pulse 1.5s infinite' }} />
+            )}
+            <VideoTrack
+              trackRef={{ participant, source: Track.Source.Camera }}
+              style={{ width: '100%', height: '100%', objectFit: 'cover', transform: 'scaleX(-1)' }}
+            />
+        </>
       ) : (
         <Avatar name={participant.name || 'Unknown'} id={participant.identity} size={64} />
       )}
